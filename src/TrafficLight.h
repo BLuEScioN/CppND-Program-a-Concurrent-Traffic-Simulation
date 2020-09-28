@@ -19,11 +19,11 @@ template <class T>
 class MessageQueue
 {
     public:
-        void send(T&& );
+        void send(T&& msg);
         T receive();
 
     private:
-        std::dequeue<T> _q;
+        std::deque<T> _q;
         std::condition_variable _cond;
         std::mutex _mtx;
 };

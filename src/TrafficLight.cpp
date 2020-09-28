@@ -11,8 +11,8 @@ T MessageQueue<T>::receive()
     // The received object should then be returned by the receive function. 
     std::unique_lock<std::mutex> uLock(_mtx);
     _cond.wait(uLock, [this] { return !_q.empty(); });
-    T msg = std::move(_q.back());
-    _q.pop_back();
+    T msg = std::move(_q.front());
+    _q.pop_front();
     return msg;
 }
 
@@ -22,7 +22,7 @@ void MessageQueue<T>::send(T&& msg)
     // FP.4a : The method send should use the mechanisms std::lock_guard<std::mutex> 
     // as well as _condition.notify_one() to add a new message to the queue and afterwards send a notification.
     std::lock_guard<std::mutex> lock(_mtx);
-    _q.push_back(std::move(msg));
+    _q.emplace_back(msg);
     _cond.notify_one(); 
 }
 
@@ -41,19 +41,15 @@ void TrafficLight::waitForGreen()
         // sleep at every iteration to reduce CPU usage
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
-        if (_q.receive() == TrafficLightPhase::green) { return; };
+      	TrafficLightPhase nextPhase = _q.receive();
+        if (nextPhase == TrafficLightPhase::green) { return; };
     }
-}
-
-TrafficLightPhase TrafficLight::getCurrentPhase()
-{
-    return _currentPhase;
 }
 
 void TrafficLight::simulate()
 {
     // FP.2b : Finally, the private method „cycleThroughPhases“ should be started in a thread when the public method „simulate“ is called. To do this, use the thread queue in the base class. 
-    _threads.emplace_back(std::thread(&TrafficLight::cycleThroughPhases, this));
+    threads.emplace_back(std::thread(&TrafficLight::cycleThroughPhases, this));
 }
 
 // virtual function which is executed in a thread
@@ -67,11 +63,11 @@ void TrafficLight::cycleThroughPhases()
     // init stop watch
     std::chrono::time_point<std::chrono::system_clock> lastUpdate = std::chrono::system_clock::now();
     
-    // Generate a random value between 4 and 6
+    // Generate a random value between 4 and 6 (ms)
     std::random_device rd;
     std::mt19937 eng(rd());
-    std::uniform_int_distribution<> distr(4, 6);
-    int phaseDuration = 1000 * distr(eng);
+  	std::uniform_real_distribution<> distr(4000.0, 6000.0);
+   	double phaseDuration = distr(eng);
     
     while (true) {
         // sleep at every iteration to reduce CPU usage
@@ -87,6 +83,7 @@ void TrafficLight::cycleThroughPhases()
                 _currentPhase = TrafficLightPhase::green;
             }
 
+          	// send update message with new phase
             _q.send(std::move(_currentPhase));
 
             // reset stop watch
