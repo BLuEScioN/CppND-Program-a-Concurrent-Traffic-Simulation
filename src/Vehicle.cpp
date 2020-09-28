@@ -87,7 +87,7 @@ void Vehicle::drive()
                 hasEnteredIntersection = true;
             }
 
-            // check wether intersection has been crossed
+            // check whether intersection has been crossed
             if (completion >= 1.0 && hasEnteredIntersection)
             {
                 // choose next street and destination

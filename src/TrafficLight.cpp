@@ -3,8 +3,6 @@
 #include "TrafficLight.h"
 
 /* Implementation of class "MessageQueue" */
-
-/* 
 template <typename T>
 T MessageQueue<T>::receive()
 {
@@ -19,11 +17,8 @@ void MessageQueue<T>::send(T &&msg)
     // FP.4a : The method send should use the mechanisms std::lock_guard<std::mutex> 
     // as well as _condition.notify_one() to add a new message to the queue and afterwards send a notification.
 }
-*/
 
 /* Implementation of class "TrafficLight" */
-
-/* 
 TrafficLight::TrafficLight()
 {
     _currentPhase = TrafficLightPhase::red;
@@ -53,6 +48,34 @@ void TrafficLight::cycleThroughPhases()
     // and toggles the current phase of the traffic light between red and green and sends an update method 
     // to the message queue using move semantics. The cycle duration should be a random value between 4 and 6 seconds. 
     // Also, the while-loop should use std::this_thread::sleep_for to wait 1ms between two cycles. 
-}
+    
+    // init stop watch
+    std::chrono::time_point<std::chrono::system_clock> lastUpdate = std::chrono::system_clock::now();
+    
+    // Generate a random value between 4 and 6
+    std::random_device rd;
+    std::mt19937 eng(rd());
+    std::uniform_int_distribution<> distr(4, 6);
+    int phaseDuration = 1000 * distr(eng);
+    
+    while (true) {
+        // sleep at every iteration to reduce CPU usage
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
-*/
+        // compute time difference to stop watch
+        long timeSinceLastUpdate = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - lastUpdate).count();
+
+        if (timeSinceLastUpdate >= phaseDuration) {
+            if (_currentPhase == TrafficLightPhase::green) {
+                _currentPhase = TrafficLightPhase::red;
+            } else {
+                _currentPhase = TrafficLightPhase::green;
+            }
+
+            _q.send(std::move(_currentPhase));
+
+            // reset stop watch
+            lastUpdate = std::chrono::system_clock::now();
+        }
+    }
+}
