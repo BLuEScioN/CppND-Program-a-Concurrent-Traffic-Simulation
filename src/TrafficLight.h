@@ -32,7 +32,7 @@ class MessageQueue
 
 enum TrafficLightPhase { red, green };
 
-class TrafficLight : TrafficObject
+class TrafficLight : public TrafficObject
 {
     public:
         // constructor / destructor
