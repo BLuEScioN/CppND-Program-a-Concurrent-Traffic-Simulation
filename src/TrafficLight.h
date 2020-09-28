@@ -18,9 +18,9 @@ class Vehicle;
 template <class T>
 class MessageQueue
 {
-public:
+    public:
 
-private:
+    private:
     
 };
 
@@ -30,24 +30,32 @@ private:
 // can be either „red“ or „green“. Also, add the private method „void cycleThroughPhases()“. 
 // Furthermore, there shall be the private member _currentPhase which can take „red“ or „green“ as its value. 
 
-class TrafficLight
+enum TrafficLightPhase { red, green };
+
+class TrafficLight : TrafficObject
 {
-public:
-    // constructor / desctructor
+    public:
+        // constructor / destructor
+        TrafficLight();
 
-    // getters / setters
+        // getters / setters
+        TrafficLightPhase getCurrentPhase() { return _currentPhase; }
 
-    // typical behaviour methods
+        // typical behaviour methods
+        void simulate();
+        void waitForGreen();
 
-private:
-    // typical behaviour methods
+    private:
+        // typical behaviour methods
+        TrafficLightPhase _currentPhase;
+        void cycleThroughPhases();
 
-    // FP.4b : create a private member of type MessageQueue for messages of type TrafficLightPhase 
-    // and use it within the infinite loop to push each new TrafficLightPhase into it by calling 
-    // send in conjunction with move semantics.
+        // FP.4b : create a private member of type MessageQueue for messages of type TrafficLightPhase 
+        // and use it within the infinite loop to push each new TrafficLightPhase into it by calling 
+        // send in conjunction with move semantics.
 
-    std::condition_variable _condition;
-    std::mutex _mutex;
+        std::condition_variable _condition;
+        std::mutex _mutex;
 };
 
 #endif
